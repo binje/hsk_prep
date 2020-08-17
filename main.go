@@ -12,6 +12,12 @@ import (
 )
 
 func main() {
+	// sql usage :
+	/*insert("猫","cat","māo")
+	insert("狗","dog","gǒu")
+	english, pinyin := query("狗")
+	fmt.Println(english)
+	fmt.Println(pinyin)*/
 
 	file, err := os.Open("hsk1vocab")
 	if err != nil {
