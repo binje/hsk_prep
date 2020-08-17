@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -35,16 +36,21 @@ func main() {
 	for {
 		keys := reflect.ValueOf(m).MapKeys()
 		q := keys[rand.Intn(len(keys))].String()
-		a := m[q]
+		ans := strings.Split(m[q], ",")
 		fmt.Print(q)
 		scanner.Scan()
 		input := scanner.Text()
-		if input == a {
-			fmt.Println("Correct")
-		} else {
-			fmt.Println("WRONG: ")
-			fmt.Println(input)
-			fmt.Println(a)
+		correct := false
+		for _, a := range ans {
+			if input == a {
+				fmt.Println("Correct")
+				correct = true
+				break
+			}
+		}
+		if !correct {
+			fmt.Print("WRONG: ")
+			fmt.Println(m[q])
 		}
 	}
 }
