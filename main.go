@@ -7,10 +7,17 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"reflect"
 	"strings"
 	"time"
+
+	"github.com/binje/hsk_prep/utils"
 )
+
+type card struct {
+	q string
+	a string
+	d string
+}
 
 func main() {
 	// sql usage :
@@ -32,31 +39,57 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m := make(map[string]string)
-	for _, r := range records {
-		m[r[0]] = r[2]
+	cards := make([]card, len(records)*4)
+	for i, r := range records {
+		h := r[0]
+		p := utils.TypablePinyinByLine(r[1])
+		e := r[2]
+		if h == "" {
+			fmt.Println("h")
+			fmt.Println(r)
+		}
+		if p == "" {
+			fmt.Println("p")
+			fmt.Println(r)
+		}
+		if e == "" {
+			fmt.Println("e")
+			fmt.Println(r)
+		}
+		j := i * 4
+		cards[j] = card{h, p, "pinyin?"}
+		cards[j+1] = card{h, e, "english?"}
+		cards[j+2] = card{p, e, "english?"}
+		cards[j+3] = card{e, h, "hanzi?"}
 	}
 
 	rand.Seed(time.Now().UnixNano())
 	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		keys := reflect.ValueOf(m).MapKeys()
-		q := keys[rand.Intn(len(keys))].String()
-		ans := strings.Split(m[q], ",")
-		fmt.Print(q)
+	i := 0
+	l := len(cards)
+	for len(cards) > 0 {
+		r := rand.Intn(len(cards))
+		c := cards[r]
+		ans := strings.Split(c.a, ",")
+		fmt.Println()
+		fmt.Println(c.q)
+		fmt.Println(c.d)
 		scanner.Scan()
 		input := scanner.Text()
 		correct := false
 		for _, a := range ans {
-			if input == a {
-				fmt.Println("Correct")
+			if input == strings.TrimSpace(a) {
+				i++
+				fmt.Printf("Correct %v/%v\n", i, l)
+				cards[r] = cards[len(cards)-1]
+				cards = cards[:len(cards)-1]
 				correct = true
 				break
 			}
 		}
 		if !correct {
 			fmt.Print("WRONG: ")
-			fmt.Println(m[q])
+			fmt.Println(c.a)
 		}
 	}
 }
