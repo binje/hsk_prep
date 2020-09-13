@@ -34,3 +34,26 @@ func TestKnownCardsAreNotReturned(t *testing.T) {
 		}
 	}
 }
+
+func TestGetQuestionsFromList(t *testing.T) {
+	db := testSqLiteDb()
+	defer db.clean()
+	f1 := Fact{"Hanzi1", "Pinyin", "English"}
+	f2 := Fact{"Hanzi2", "Pinyin", "English"}
+	f3 := Fact{"Hanzi3", "Pinyin", "English"}
+	db.InsertFact(f1)
+	db.InsertFact(f2)
+	db.InsertFact(f3)
+	cards := db.GetQuestionsFromList([]string{})
+	if len(cards) != 0 {
+		t.Errorf("Expected 0 cards, got: %v", len(cards))
+	}
+	cards = db.GetQuestionsFromList([]string{f1.Hanzi})
+	if len(cards) != 4 {
+		t.Errorf("Expected 4 cards, got: %v", len(cards))
+	}
+	cards = db.GetQuestionsFromList([]string{f1.Hanzi, f3.Hanzi})
+	if len(cards) != 8 {
+		t.Errorf("Expected 8 cards, got: %v", len(cards))
+	}
+}

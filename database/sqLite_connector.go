@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,7 +17,7 @@ type SqLiteDb struct {
 
 func NewSqLiteDb() *SqLiteDb {
 	s := SqLiteDb{}
-	s.init("./try.db")
+	s.init("./dict.db")
 	return &s
 }
 
@@ -53,7 +54,23 @@ func (s *SqLiteDb) InsertFacts(fs []Fact) {
 func (s *SqLiteDb) GetQuestions() []Card {
 	rows, e := s.db.Query("SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM HSK1")
 	checkError(e)
+	return makeCards(rows)
 
+}
+
+func (s *SqLiteDb) GetQuestionsFromList(words []string) []Card {
+	if len(words) == 0 {
+		return []Card{}
+	}
+
+	q := fmt.Sprintf(
+		`SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM HSK1 WHERE hanzi in ("%s")`, strings.Join(words, "\",\""))
+	rows, e := s.db.Query(q)
+	checkError(e)
+	return makeCards(rows)
+}
+
+func makeCards(rows *sql.Rows) []Card {
 	cards := make([]Card, 0)
 	for rows.Next() {
 		var e, h, p string
@@ -76,6 +93,7 @@ func (s *SqLiteDb) GetQuestions() []Card {
 		}
 	}
 	return cards
+
 }
 
 func (s *SqLiteDb) query(hanzi string) (english, pinyin string) {

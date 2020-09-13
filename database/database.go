@@ -26,5 +26,6 @@ type Database interface {
 	InsertFact(Fact)
 	InsertFacts([]Fact)
 	GetQuestions() []Card
+	GetQuestionsFromList([]string) []Card
 	MarkKnown(Card)
 }
