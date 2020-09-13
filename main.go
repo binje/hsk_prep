@@ -32,28 +32,32 @@ func main() {
 	for len(cards) > 0 {
 		r := rand.Intn(len(cards))
 		c := cards[r]
-		ans := strings.Split(c.Answers, ",")
 		printQuestion(c)
 
 		scanner.Scan()
 		input := strings.TrimSpace(scanner.Text())
-		correct := false
-		for _, a := range ans {
-			if input == strings.TrimSpace(a) {
-				i++
-				fmt.Printf("Correct %v/%v\n", i, l)
-				cards[r] = cards[len(cards)-1]
-				cards = cards[:len(cards)-1]
-				correct = true
-				db.MarkKnown(c)
-				break
-			}
-		}
-		if !correct {
+
+		if isCorrect(input, c.Answers) {
+			i++
+			fmt.Printf("Correct %v/%v\n", i, l)
+			cards[r] = cards[len(cards)-1]
+			cards = cards[:len(cards)-1]
+			db.MarkKnown(c)
+		} else {
 			fmt.Print("WRONG: ")
 			fmt.Println(c.Answers)
 		}
 	}
+}
+
+func isCorrect(input, answers string) bool {
+	ans := strings.Split(answers, ",")
+	for _, a := range ans {
+		if input == strings.TrimSpace(a) {
+			return true
+		}
+	}
+	return false
 }
 
 func printQuestion(c database.Card) {

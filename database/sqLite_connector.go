@@ -26,7 +26,8 @@ func (s *SqLiteDb) init(dbName string) {
 	checkError(e)
 	statement, e := s.db.Prepare(`CREATE TABLE IF NOT EXISTS HSK1 
 		(hanzi TEXT PRIMARY KEY, english TEXT, pinyin TEXT, 
-		h2p DATETIME, h2e DATETIME, p2e DATETIME, e2h DATETIME
+		h2p DATETIME, h2e DATETIME, p2e DATETIME, e2h DATETIME,
+		h2pPower INTEGER, h2ePower INTEGER, p2ePower INTEGER, e2hPower INTEGER
 		)`)
 	checkError(e)
 	statement.Exec()
@@ -60,28 +61,27 @@ func (s *SqLiteDb) GetQuestions() []Card {
 		if err := rows.Scan(&e, &h, &p, &h2p, &h2e, &p2e, &e2h); err != nil {
 			log.Fatal(err)
 		}
-		if h2p == nil {
+		now := time.Now()
+		if h2p == nil || now.After(*h2p) {
 			cards = append(cards, Card{h, h, p, Hanzi, Pinyin})
 		}
-		if h2e == nil {
+		if h2e == nil || now.After(*h2e) {
 			cards = append(cards, Card{h, h, e, Hanzi, English})
 		}
-		if p2e == nil {
+		if p2e == nil || now.After(*p2e) {
 			cards = append(cards, Card{h, p, e, Pinyin, English})
 		}
-		if e2h == nil {
+		if e2h == nil || now.After(*e2h) {
 			cards = append(cards, Card{h, e, h, English, Hanzi})
 		}
 	}
 	return cards
 }
 
-func (s *SqLiteDb) query(hanzi string) (string, string) {
+func (s *SqLiteDb) query(hanzi string) (english, pinyin string) {
 	row := s.db.QueryRow("SELECT english, pinyin FROM HSK1 WHERE hanzi=?", hanzi)
-	var english string
-	var pinyin string
 	row.Scan(&english, &pinyin)
-	return english, pinyin
+	return
 }
 
 func (s *SqLiteDb) MarkKnown(c Card) {
@@ -109,13 +109,35 @@ func (s *SqLiteDb) MarkKnown(c Card) {
 		fmt.Println(c)
 		return
 	}
+
+	power := s.getPower(field, c.Key)
+
 	q := fmt.Sprintf(
 		`UPDATE HSK1
-	SET %s=datetime('now')
+	SET %s=datetime('now','+%d day'), %s = %d 
 	WHERE hanzi="%s"`,
-		field, c.Key)
+		field, numDays(power), field+"Power", power+1, c.Key)
 	_, err := s.db.Exec(q)
 	checkError(err)
+}
+
+func (s *SqLiteDb) getPower(field, key string) int {
+	var power *int
+	q := fmt.Sprintf(`SELECT %s FROM HSK1 WHERE hanzi="%s"`, field+"Power", key)
+	row := s.db.QueryRow(q)
+	row.Scan(&power)
+	if power == nil {
+		return 0
+	}
+	return *power
+}
+
+func numDays(n int) int {
+	d := 1
+	for i := 0; i < n; i++ {
+		d *= 5
+	}
+	return d
 }
 
 func testSqLiteDb() SqLiteDb {
