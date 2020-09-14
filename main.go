@@ -25,7 +25,7 @@ func main() {
 	db := database.NewSqLiteDb()
 	loadCCEDICT(db)
 
-	cards := db.GetQuestions()
+	cards := db.GetQuestionsFromList(dictionary.ParseVocabList("dictionary/hsk1"))
 	rand.Seed(time.Now().UnixNano())
 	scanner := bufio.NewScanner(os.Stdin)
 	i := 0

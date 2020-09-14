@@ -47,3 +47,18 @@ func parseCCEDICT(filePath string) []database.Fact {
 	}
 	return facts
 }
+
+func ParseVocabList(filePath string) []string {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	words := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		words = append(words, strings.TrimSpace(scanner.Text()))
+	}
+	return words
+}

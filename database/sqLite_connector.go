@@ -65,12 +65,15 @@ func (s *SqLiteDb) GetQuestionsFromList(words []string) []Card {
 
 	q := fmt.Sprintf(
 		`SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM HSK1 WHERE hanzi in ("%s")`, strings.Join(words, "\",\""))
+	fmt.Println("QUERY")
+	fmt.Println(q)
 	rows, e := s.db.Query(q)
 	checkError(e)
 	return makeCards(rows)
 }
 
 func makeCards(rows *sql.Rows) []Card {
+	fmt.Println("MakingCards")
 	cards := make([]Card, 0)
 	for rows.Next() {
 		var e, h, p string
@@ -78,6 +81,7 @@ func makeCards(rows *sql.Rows) []Card {
 		if err := rows.Scan(&e, &h, &p, &h2p, &h2e, &p2e, &e2h); err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println("making card, ", h)
 		now := time.Now()
 		if h2p == nil || now.After(*h2p) {
 			cards = append(cards, Card{h, h, p, Hanzi, Pinyin})
