@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/binje/hsk_prep/database"
+	"github.com/binje/hsk_prep/dictionary"
 )
 
 type card struct {
@@ -22,7 +23,7 @@ type card struct {
 func main() {
 
 	db := database.NewSqLiteDb()
-	loadVocab(db, "dictionary/hsk1vocab")
+	loadCCEDICT(db)
 
 	cards := db.GetQuestions()
 	rand.Seed(time.Now().UnixNano())
@@ -88,5 +89,15 @@ func loadVocab(db database.Database, filePath string) {
 
 	for _, r := range records {
 		db.InsertFact(database.Fact{r[0], r[1], r[2]})
+	}
+}
+
+func loadCCEDICT(db database.Database) {
+	facts := dictionary.ParseCCEDICT()
+	for i, fact := range facts {
+		if i%10000 == 0 {
+			fmt.Println(i)
+		}
+		db.InsertFact(fact)
 	}
 }
