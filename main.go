@@ -47,6 +47,7 @@ func main() {
 		} else {
 			fmt.Print("WRONG: ")
 			fmt.Println(c.Answers)
+			db.MarkUnknown(c)
 		}
 	}
 }

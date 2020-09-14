@@ -107,25 +107,8 @@ func (s *SqLiteDb) query(hanzi string) (english, pinyin string) {
 }
 
 func (s *SqLiteDb) MarkKnown(c Card) {
-	var field string
-	switch c.QuestionType {
-	case Hanzi:
-		if c.AnswerType == Pinyin {
-			field = "h2p"
-		}
-		if c.AnswerType == English {
-			field = "h2e"
-		}
-	case Pinyin:
-		if c.AnswerType == English {
-			field = "p2e"
-		}
-	case English:
-		if c.AnswerType == Hanzi {
-			field = "e2h"
-		}
 
-	}
+	field := getFieldName(c)
 	if field == "" {
 		fmt.Println("Card could not be marked known")
 		fmt.Println(c)
@@ -141,6 +124,45 @@ func (s *SqLiteDb) MarkKnown(c Card) {
 		field, numDays(power), field+"Power", power+1, c.Key)
 	_, err := s.db.Exec(q)
 	checkError(err)
+}
+
+func (s *SqLiteDb) MarkUnknown(c Card) {
+	field := getFieldName(c)
+	if field == "" {
+		fmt.Println("Card could not be marked unknown")
+		fmt.Println(c)
+		return
+	}
+
+	q := fmt.Sprintf(
+		`UPDATE HSK1
+	SET %s=datetime('now'), %s = %d 
+	WHERE hanzi="%s"`,
+		field, field+"Power", 0, c.Key)
+	_, err := s.db.Exec(q)
+	checkError(err)
+}
+
+func getFieldName(c Card) string {
+	switch c.QuestionType {
+	case Hanzi:
+		if c.AnswerType == Pinyin {
+			return "h2p"
+		}
+		if c.AnswerType == English {
+			return "h2e"
+		}
+	case Pinyin:
+		if c.AnswerType == English {
+			return "p2e"
+		}
+	case English:
+		if c.AnswerType == Hanzi {
+			return "e2h"
+		}
+
+	}
+	return ""
 }
 
 func (s *SqLiteDb) getPower(field, key string) int {

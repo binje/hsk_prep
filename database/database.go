@@ -28,4 +28,5 @@ type Database interface {
 	GetQuestions() []Card
 	GetQuestionsFromList([]string) []Card
 	MarkKnown(Card)
+	MarkUnknown(Card)
 }
