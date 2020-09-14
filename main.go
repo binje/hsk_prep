@@ -30,6 +30,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	i := 0
 	l := len(cards)
+
 	for len(cards) > 0 {
 		r := rand.Intn(len(cards))
 		c := cards[r]
@@ -50,6 +51,7 @@ func main() {
 			db.MarkUnknown(c)
 		}
 	}
+	fmt.Println("CONGRATULATIONS! YOU KNOW ALL OF THE WORDS!")
 }
 
 func isCorrect(input, answers string) bool {
