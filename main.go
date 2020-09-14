@@ -53,7 +53,7 @@ func main() {
 }
 
 func isCorrect(input, answers string) bool {
-	ans := strings.Split(answers, ",")
+	ans := strings.Split(answers, "/")
 	for _, a := range ans {
 		if input == strings.TrimSpace(a) {
 			return true
@@ -64,7 +64,19 @@ func isCorrect(input, answers string) bool {
 
 func printQuestion(c database.Card) {
 	fmt.Println()
-	fmt.Println(c.Question)
+	switch c.QuestionType {
+	case database.Hanzi:
+		fmt.Println(c.Question)
+	case database.Pinyin:
+		fmt.Println(c.Question)
+	case database.English:
+		definitions := strings.Split(c.Question, "/")
+		for _, d := range definitions {
+			if d != "" {
+				fmt.Println(d)
+			}
+		}
+	}
 	switch c.AnswerType {
 	case database.Hanzi:
 		fmt.Println("Hanzi?")
