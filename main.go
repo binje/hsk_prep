@@ -55,9 +55,13 @@ func main() {
 }
 
 func isCorrect(input, answers string) bool {
+	if input == "" {
+		return false
+	}
+	input = strings.ToLower(input)
 	ans := strings.Split(answers, "/")
 	for _, a := range ans {
-		if input == strings.TrimSpace(a) {
+		if input == strings.ToLower(strings.TrimSpace(a)) {
 			return true
 		}
 	}
