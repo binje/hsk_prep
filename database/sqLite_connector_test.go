@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -56,4 +57,20 @@ func TestGetQuestionsFromList(t *testing.T) {
 	if len(cards) != 8 {
 		t.Errorf("Expected 8 cards, got: %v", len(cards))
 	}
+}
+
+func BenchmarkInsertion10kBatched(b *testing.B) {
+	db := testSqLiteDb()
+	f := generateFacts(10000)
+	db.InsertFactsBatched(f)
+	db.clean()
+}
+
+func generateFacts(n int) []Fact {
+	f := make([]Fact, n)
+	for i := 0; i < n; i++ {
+		s := fmt.Sprintf("%d", i)
+		f[i] = Fact{s, s, s}
+	}
+	return f
 }

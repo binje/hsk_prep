@@ -43,12 +43,32 @@ func (s *SqLiteDb) InsertFact(f Fact) {
 }
 
 func (s *SqLiteDb) InsertFacts(fs []Fact) {
-	statement, e := s.db.Prepare("INSERT INTO HSK1 (english, hanzi, pinyin) VALUES (?,?,?)")
-	checkError(e)
-	for _, f := range fs {
-		statement.Exec(f.English, f.Hanzi, f.Pinyin)
+	tx, err := s.db.Begin()
+	if err != nil {
+		panic(err)
 	}
-	statement.Close()
+	statement, e := tx.Prepare("INSERT INTO HSK1 (english, hanzi, pinyin) VALUES (?,?,?)")
+	checkError(e)
+	lastKey := ""
+	for _, f := range fs {
+		//Uniqueness needed. TODO glob together
+		if f.Hanzi == lastKey {
+			continue
+		}
+		lastKey = f.Hanzi
+		_, err = statement.Exec(f.English, f.Hanzi, f.Pinyin)
+		if err != nil {
+			panic(err)
+		}
+	}
+	err = statement.Close()
+	if err != nil {
+		panic(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (s *SqLiteDb) GetQuestions() []Card {
