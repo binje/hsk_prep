@@ -2,9 +2,11 @@ package dictionary
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/binje/hsk_prep/database"
 )
@@ -25,27 +27,51 @@ func parseCCEDICT(filePath string) []database.Fact {
 	facts := make([]database.Fact, 0, 120000)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "#") {
-			continue
+		fact := createFact(line)
+		if fact != nil {
+			facts = append(facts, *fact)
 		}
-		if !strings.ContainsRune(line, '[') {
-			continue
-		}
-		if !strings.ContainsRune(line, ']') {
-			continue
-		}
-		split1 := strings.SplitN(line, "[", 2)
-		mandarin := strings.Split(strings.TrimSpace(split1[0]), " ")
-		_, simplified := mandarin[0], mandarin[1]
-		split2 := strings.SplitN(split1[1], "]", 2)
-		pinyin, english := split2[0], split2[1]
-		facts = append(facts, database.Fact{simplified, pinyin, english})
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 	return facts
+}
+
+func createFact(line string) *database.Fact {
+	if !hasDictFormat(line) {
+		return nil
+	}
+	split1 := strings.SplitN(line, "[", 2)
+	mandarin := strings.Split(strings.TrimSpace(split1[0]), " ")
+	_, simplified := mandarin[0], mandarin[1]
+	split2 := strings.SplitN(split1[1], "]", 2)
+	pinyin, english := split2[0], split2[1]
+	if isProperNoun(pinyin) {
+		return nil
+	}
+	return &database.Fact{simplified, pinyin, english}
+}
+
+func isProperNoun(pinyin string) bool {
+	r := []rune(pinyin)
+	fmt.Println(r)
+	return unicode.IsUpper(r[0])
+}
+
+func hasDictFormat(entry string) bool {
+	if strings.HasPrefix(entry, "#") {
+		// is a comment
+		return false
+	}
+	if !strings.ContainsRune(entry, '[') {
+		return false
+	}
+	if !strings.ContainsRune(entry, ']') {
+		return false
+	}
+	return true
 }
 
 func ParseVocabList(filePath string) []string {
