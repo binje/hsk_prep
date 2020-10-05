@@ -113,10 +113,5 @@ func loadVocab(db database.Database, filePath string) {
 
 func loadCCEDICT(db database.Database) {
 	facts := dictionary.ParseCCEDICT()
-	for i, fact := range facts {
-		if i%10000 == 0 {
-			fmt.Println(i)
-		}
-		db.InsertFact(fact)
-	}
+	db.InsertFacts(facts)
 }

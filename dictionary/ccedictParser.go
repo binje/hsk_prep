@@ -2,7 +2,6 @@ package dictionary
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -25,11 +24,18 @@ func parseCCEDICT(filePath string) []database.Fact {
 	scanner := bufio.NewScanner(file)
 
 	facts := make([]database.Fact, 0, 120000)
+	h := make(map[string]struct{})
 	for scanner.Scan() {
 		line := scanner.Text()
 		fact := createFact(line)
 		if fact != nil {
+			if _, ok := h[fact.Hanzi]; ok {
+				// TODO use traditional as well?
+				// TODO gob these together
+				continue
+			}
 			facts = append(facts, *fact)
+			h[fact.Hanzi] = struct{}{}
 		}
 	}
 
@@ -56,7 +62,6 @@ func createFact(line string) *database.Fact {
 
 func isProperNoun(pinyin string) bool {
 	r := []rune(pinyin)
-	fmt.Println(r)
 	return unicode.IsUpper(r[0])
 }
 
