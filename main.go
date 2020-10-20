@@ -5,20 +5,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/binje/hsk_prep/database"
 	"github.com/binje/hsk_prep/dictionary"
 )
-
-type card struct {
-	q string
-	a string
-	d string
-}
 
 func main() {
 
@@ -26,14 +18,13 @@ func main() {
 	loadCCEDICT(db)
 
 	cards := db.GetQuestionsFromList(dictionary.ParseVocabList("dictionary/hsk1"))
-	rand.Seed(time.Now().UnixNano())
 	scanner := bufio.NewScanner(os.Stdin)
 	i := 0
 	l := len(cards)
+	q := GenerateQueue(cards)
 
-	for len(cards) > 0 {
-		r := rand.Intn(len(cards))
-		c := cards[r]
+	for q.HasNext() {
+		c := q.GetNext()
 		printQuestion(c)
 
 		scanner.Scan()
@@ -42,13 +33,12 @@ func main() {
 		if isCorrect(input, c.Answers) {
 			i++
 			fmt.Printf("Correct %v/%v\n", i, l)
-			cards[r] = cards[len(cards)-1]
-			cards = cards[:len(cards)-1]
 			db.MarkKnown(c)
 		} else {
 			fmt.Print("WRONG: ")
 			fmt.Println(c.Answers)
 			db.MarkUnknown(c)
+			q.MarkUnknown(c)
 		}
 	}
 	fmt.Println("CONGRATULATIONS! YOU KNOW ALL OF THE WORDS!")
