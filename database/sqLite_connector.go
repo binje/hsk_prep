@@ -25,7 +25,7 @@ func (s *SqLiteDb) init(dbName string) {
 	var e error
 	s.db, e = sql.Open("sqlite3", dbName)
 	checkError(e)
-	statement, e := s.db.Prepare(`CREATE TABLE IF NOT EXISTS HSK1 
+	statement, e := s.db.Prepare(`CREATE TABLE IF NOT EXISTS CHINESE 
 		(hanzi TEXT PRIMARY KEY, english TEXT, pinyin TEXT, 
 		h2p DATETIME, h2e DATETIME, p2e DATETIME, e2h DATETIME,
 		h2pPower INTEGER, h2ePower INTEGER, p2ePower INTEGER, e2hPower INTEGER
@@ -36,7 +36,7 @@ func (s *SqLiteDb) init(dbName string) {
 }
 
 func (s *SqLiteDb) InsertFact(f Fact) {
-	statement, e := s.db.Prepare("INSERT INTO HSK1 (english, hanzi, pinyin) VALUES (?,?,?)")
+	statement, e := s.db.Prepare("INSERT INTO CHINESE (english, hanzi, pinyin) VALUES (?,?,?)")
 	checkError(e)
 	statement.Exec(f.English, f.Hanzi, f.Pinyin)
 	statement.Close()
@@ -47,7 +47,7 @@ func (s *SqLiteDb) InsertFacts(fs []Fact) {
 	if err != nil {
 		panic(err)
 	}
-	statement, e := tx.Prepare("INSERT INTO HSK1 (english, hanzi, pinyin) VALUES (?,?,?)")
+	statement, e := tx.Prepare("INSERT INTO CHINESE (english, hanzi, pinyin) VALUES (?,?,?)")
 	checkError(e)
 	lastKey := ""
 	for _, f := range fs {
@@ -72,7 +72,7 @@ func (s *SqLiteDb) InsertFacts(fs []Fact) {
 }
 
 func (s *SqLiteDb) GetQuestions() []Card {
-	rows, e := s.db.Query("SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM HSK1")
+	rows, e := s.db.Query("SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM CHINESE")
 	checkError(e)
 	return makeCards(rows)
 
@@ -84,7 +84,7 @@ func (s *SqLiteDb) GetQuestionsFromList(words []string) []Card {
 	}
 
 	q := fmt.Sprintf(
-		`SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM HSK1 WHERE hanzi in ("%s")`, strings.Join(words, "\",\""))
+		`SELECT english, hanzi, pinyin, h2p, h2e, p2e, e2h FROM CHINESE WHERE hanzi in ("%s")`, strings.Join(words, "\",\""))
 	rows, e := s.db.Query(q)
 	checkError(e)
 	return makeCards(rows)
@@ -117,7 +117,7 @@ func makeCards(rows *sql.Rows) []Card {
 }
 
 func (s *SqLiteDb) query(hanzi string) (english, pinyin string) {
-	row := s.db.QueryRow("SELECT english, pinyin FROM HSK1 WHERE hanzi=?", hanzi)
+	row := s.db.QueryRow("SELECT english, pinyin FROM CHINESE WHERE hanzi=?", hanzi)
 	row.Scan(&english, &pinyin)
 	return
 }
@@ -134,7 +134,7 @@ func (s *SqLiteDb) MarkKnown(c Card) {
 	power := s.getPower(field, c.Key)
 
 	q := fmt.Sprintf(
-		`UPDATE HSK1
+		`UPDATE CHINESE
 	SET %s=datetime('now','+%d day'), %s = %d 
 	WHERE hanzi="%s"`,
 		field, numDays(power), field+"Power", power+1, c.Key)
@@ -151,7 +151,7 @@ func (s *SqLiteDb) MarkUnknown(c Card) {
 	}
 
 	q := fmt.Sprintf(
-		`UPDATE HSK1
+		`UPDATE CHINESE
 	SET %s=datetime('now'), %s = %d 
 	WHERE hanzi="%s"`,
 		field, field+"Power", 0, c.Key)
@@ -183,7 +183,7 @@ func getFieldName(c Card) string {
 
 func (s *SqLiteDb) getPower(field, key string) int {
 	var power *int
-	q := fmt.Sprintf(`SELECT %s FROM HSK1 WHERE hanzi="%s"`, field+"Power", key)
+	q := fmt.Sprintf(`SELECT %s FROM CHINESE WHERE hanzi="%s"`, field+"Power", key)
 	row := s.db.QueryRow(q)
 	row.Scan(&power)
 	if power == nil {
@@ -207,7 +207,7 @@ func testSqLiteDb() SqLiteDb {
 }
 
 func (s *SqLiteDb) clean() {
-	s.db.Exec("DROP TABLE HSK1")
+	s.db.Exec("DROP TABLE CHINESE")
 }
 
 func checkError(e error) {
