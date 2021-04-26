@@ -59,13 +59,6 @@ func TestGetQuestionsFromList(t *testing.T) {
 	}
 }
 
-func BenchmarkInsertion10kBatched(b *testing.B) {
-	db := testSqLiteDb()
-	f := generateFacts(10000)
-	db.InsertFactsBatched(f)
-	db.clean()
-}
-
 func generateFacts(n int) []Fact {
 	f := make([]Fact, n)
 	for i := 0; i < n; i++ {
